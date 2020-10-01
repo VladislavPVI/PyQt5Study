@@ -5,12 +5,15 @@ import sys
 
 from PyQt5 import QtGui
 
+image = QImage("321.jpg").scaled(600, 600, Qt.IgnoreAspectRatio)
+
 class MyLabel(QLabel):
     x0 = 0
     y0 = 0
     x1 = 0
     y1 = 0
     flag = False
+    rect = QRect()
 
     def mousePressEvent(self,event):
         self.flag = True
@@ -18,7 +21,16 @@ class MyLabel(QLabel):
         self.y0 = event.y()
 
     def mouseReleaseEvent(self,event):
-        self.flag = False
+        p = QPainter(image)
+        p.setPen(QPen(Qt.red, 2, Qt.SolidLine))
+        p.drawRect(self.rect)
+        self.setPixmap(QPixmap(image))
+
+        self.x0 = 0
+        self.y0 = 0
+        self.x1 = 0
+        self.y1 = 0
+
 
     def mouseMoveEvent(self,event):
         if self.flag:
@@ -28,10 +40,12 @@ class MyLabel(QLabel):
 
     def paintEvent(self, event):
         super().paintEvent(event)
-        rect =QRect(self.x0, self.y0, self.x1-self.x0, self.y1-self.y0)
+        self.rect = QRect(self.x0, self.y0, self.x1-self.x0, self.y1-self.y0)
         painter = QPainter(self)
         painter.setPen(QPen(Qt.red,2,Qt.SolidLine))
-        painter.drawRect(rect)
+        painter.drawRect(self.rect)
+
+
 
 class MainWindow(QMainWindow):
 
@@ -44,7 +58,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('Manual object detection')
         self.lb = MyLabel(self)
 
-        self.lb.setGeometry(QRect(30, 30, 511, 541))
+        self.lb.setFixedSize(600,600)
 
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('File')
@@ -58,11 +72,8 @@ class MainWindow(QMainWindow):
         fileMenu.addAction(saveImg)
         fileMenu.addAction(cleanB)
 
-        pix = QtGui.QPixmap('123.jpg')
-
+        self.lb.setPixmap(QPixmap(image))
         self.setFixedSize(600,600)
-
-        self.lb.setPixmap(pix)
         self.lb.setCursor(Qt.CrossCursor)
         self.show()
 
