@@ -2,21 +2,21 @@ from PyQt5.QtWidgets import QWidget, QApplication, QLabel, QMainWindow, QAction,
 from PyQt5.QtCore import QRect, Qt
 from PyQt5.QtGui import QImage, QPixmap, QPainter, QPen, QGuiApplication
 import sys
+import numpy as np
 
 from PyQt5 import QtGui
 
-image = QImage("321.jpg").scaled(600, 600, Qt.IgnoreAspectRatio)
+image = QImage("123.jpg").scaled(600, 600, Qt.IgnoreAspectRatio)
+objects = []
 
 class MyLabel(QLabel):
     x0 = 0
     y0 = 0
     x1 = 0
     y1 = 0
-    flag = False
     rect = QRect()
 
     def mousePressEvent(self,event):
-        self.flag = True
         self.x0 = event.x()
         self.y0 = event.y()
 
@@ -25,18 +25,17 @@ class MyLabel(QLabel):
         p.setPen(QPen(Qt.red, 2, Qt.SolidLine))
         p.drawRect(self.rect)
         self.setPixmap(QPixmap(image))
+        objects.append(self.rect)
 
         self.x0 = 0
         self.y0 = 0
         self.x1 = 0
         self.y1 = 0
 
-
     def mouseMoveEvent(self,event):
-        if self.flag:
-            self.x1 = event.x()
-            self.y1 = event.y()
-            self.update()
+        self.x1 = event.x()
+        self.y1 = event.y()
+        self.update()
 
     def paintEvent(self, event):
         super().paintEvent(event)
@@ -44,8 +43,6 @@ class MyLabel(QLabel):
         painter = QPainter(self)
         painter.setPen(QPen(Qt.red,2,Qt.SolidLine))
         painter.drawRect(self.rect)
-
-
 
 class MainWindow(QMainWindow):
 
@@ -57,6 +54,7 @@ class MainWindow(QMainWindow):
     def initUI(self):
         self.setWindowTitle('Manual object detection')
         self.lb = MyLabel(self)
+        global image
 
         self.lb.setFixedSize(600,600)
 
@@ -67,6 +65,8 @@ class MainWindow(QMainWindow):
         cleanB = QAction('Clean', self)
 
         newLoad.triggered.connect(self.updatePic)
+        cleanB.triggered.connect(self.cleanImage)
+        saveImg.triggered.connect(self.saveImage)
 
         fileMenu.addAction(newLoad)
         fileMenu.addAction(saveImg)
@@ -77,10 +77,30 @@ class MainWindow(QMainWindow):
         self.lb.setCursor(Qt.CrossCursor)
         self.show()
 
+    def saveImage(self):
+        fname = ''
+        while (fname==''):
+            fname = QFileDialog.getSaveFileName(self, 'Open file',
+                                                '', "Image files (*.jpg *.png)")[0]
+
+        image.save(fname)
+        np.savetxt('objects.txt', np.array(objects), fmt="%s")
+
+    def cleanImage(self):
+        global image
+        image = QImage(self.size(), QImage.Format_RGB32)
+        image.fill(Qt.white)
+        pix = QtGui.QPixmap(image)
+        self.lb.setPixmap(pix)
+
     def updatePic(self):
-        fname = QFileDialog.getOpenFileName(self, 'Open file',
-                                            'c:\\', "Image files (*.jpg *.gif)")[0]
-        pix = QtGui.QPixmap(fname)
+        fname = ''
+        while (fname == ''):
+            fname = QFileDialog.getOpenFileName(self, 'Open file',
+                                                '', "Image files (*.jpg *.png *.jpeg)")[0]
+        global image
+        image = QImage(fname).scaled(600, 600, Qt.IgnoreAspectRatio)
+        pix = QtGui.QPixmap(image)
         self.lb.setPixmap(pix)
 
 if __name__ == '__main__':
