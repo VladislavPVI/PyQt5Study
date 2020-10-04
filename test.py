@@ -91,6 +91,7 @@ class MainWindow(QMainWindow):
         image = QImage(self.size(), QImage.Format_RGB32)
         image.fill(Qt.white)
         pix = QtGui.QPixmap(image)
+        objects.clear()
         self.lb.setPixmap(pix)
 
     def updatePic(self):
@@ -101,6 +102,7 @@ class MainWindow(QMainWindow):
         global image
         image = QImage(fname).scaled(600, 600, Qt.IgnoreAspectRatio)
         pix = QtGui.QPixmap(image)
+        objects.clear()
         self.lb.setPixmap(pix)
 
 if __name__ == '__main__':
